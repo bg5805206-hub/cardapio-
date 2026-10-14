@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelCodado — Espetinhos</title>
+<style>
+  :root{
+    --bg: #171210;
+    --bg-2: #241a15;
+    --surface: #1f1712;
+    --surface-border: #3a2c22;
+    --text: #d8cfc2;
+    --text-strong: #f2e9d8;
+    --text-muted: #9c8b78;
+    --accent: #e0641c;
+    --accent-2: #f07b34;
+    --accent-dark: #a8420f;
+    --tag-bg: #f2e9d8;
+    --tag-text: #2b2013;
+    --tag-border: #d8c9a3;
+  }
+
+  html[data-tema="claro"]{
+    --bg: #f6efe1;
+    --bg-2: #ece0c8;
+    --surface: #fffaf3;
+    --surface-border: #d8c9a3;
+    --text: #3a2c22;
+    --text-strong: #201709;
+    --text-muted: #8a7a63;
+    --accent: #c1501f;
+    --accent-2: #d96a34;
+    --accent-dark: #8a3a12;
+    --tag-bg: #2b2013;
+    --tag-text: #f2e9d8;
+    --tag-border: #4a382b;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, .num, .marca{
+    font-family: "Oswald", "Arial Narrow", sans-serif;
+  }
+
+  button{ font-family: inherit; }
+
+  /* ---------- splash ---------- */
+  #splash{
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: opacity 0.5s ease;
+  }
+  #splash.saindo{ opacity: 0; pointer-events: none; }
+  #splash.escondido{ display: none; }
+
+  .logo-splash{
+    font-size: clamp(2.2rem, 9vw, 3.6rem);
+    color: var(--text-strong);
+    letter-spacing: 0.02em;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: surgir 0.7s ease forwards 0.15s;
+  }
+  .logo-splash strong{ color: var(--accent); font-weight: 700; }
+
+  .splash-sub{
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: surgir 0.7s ease forwards 0.4s;
+  }
+
+  .splash-barra{
+    width: 160px;
+    height: 3px;
+    background: var(--surface-border);
+    border-radius: 999px;
+    overflow: hidden;
+    opacity: 0;
+    animation: surgir 0.4s ease forwards 0.6s;
+  }
+  .splash-barra span{
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    animation: carregar 1.4s ease forwards 0.7s;
+  }
+
+  @keyframes surgir{ to{ opacity: 1; transform: translateY(0); } }
+  @keyframes carregar{ to{ width: 100%; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .logo-splash, .splash-sub, .splash-barra, .splash-barra span{ animation: none; opacity: 1; width: 100%; }
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.5rem;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--surface-border);
+  }
+  .marca{
+    color: var(--text-strong);
+    font-size: 1.1rem;
+    letter-spacing: 0.03em;
+  }
+  .marca strong{ color: var(--accent); }
+
+  #toggle-tema{
+    border: 1px solid var(--surface-border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  /* ---------- topo hero ---------- */
+  header{
+    padding: 3rem 1.5rem 1.6rem;
+    background:
+      radial-gradient(ellipse at top left, rgba(224,100,28,0.18), transparent 55%),
+      var(--bg-2);
+    border-bottom: 3px solid var(--accent);
+    text-align: center;
+  }
+
+  header h1{
+    margin: 0;
+    font-size: clamp(2.2rem, 7.5vw, 3.8rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-strong);
+    line-height: 1;
+  }
+  header h1 span{ color: var(--accent); }
+
+  header p{
+    margin: 0.6rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---------- busca + categorias ---------- */
+  .controles{
+    max-width: 780px;
+    margin: 1.6rem auto 0;
+    padding: 0 1.5rem;
+  }
+
+  #busca{
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border);
+    background: var(--surface);
+    color: var(--text-strong);
+    font-size: 1rem;
+    outline: none;
+  }
+  #busca::placeholder{ color: var(--text-muted); }
+  #busca:focus{ border-color: var(--accent); }
+
+  .chips{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+  .chip{
+    border: 1px solid var(--surface-border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .chip.ativo{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  /* ---------- lista ---------- */
+  main{
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 8rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 3rem;
+  }
+  @media (max-width: 720px){ main{ grid-template-columns: 1fr; } }
+
+  .item{
+    display: grid;
+    grid-template-columns: 2.1rem 1fr auto auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px dashed var(--surface-border);
+  }
+  .item.oculto{ display: none; }
+
+  .num{ color: var(--accent-dark); font-size: 1.05rem; font-weight: 600; }
+
+  .nome{ font-size: 1rem; color: var(--text-strong); }
+  .nome small{
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 0.15rem;
+  }
+
+  .preco{
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border: 1px solid var(--tag-border);
+    border-radius: 8px;
+    padding: 0.3rem 0.55rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  }
+
+  .fav-btn{
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+  .fav-btn.marcado{ color: var(--accent); }
+
+  .item-qtd-ctrl{
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .add-btn, .menos-btn{
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  }
+  .add-btn:hover, .menos-btn:hover{ background: var(--accent-2); }
+  .add-btn:active, .menos-btn:active{ transform: scale(0.9); }
+
+  .menos-btn{
+    background: var(--surface);
+    color: var(--text-strong);
+    border: 1px solid var(--surface-border);
+  }
+  .menos-btn:hover{ background: var(--surface); border-color: var(--accent); }
+  .menos-btn[disabled]{ opacity: 0.35; cursor: not-allowed; }
+
+  .item-qtd{
+    min-width: 1.2rem;
+    text-align: center;
+    color: var(--text-strong);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .sem-resultado{
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem 0;
+    display: none;
+  }
+
+  /* ---------- sobre + rodapé ---------- */
+  #sobre{
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    text-align: center;
+  }
+  #sobre h2{
+    color: var(--text-strong);
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.8rem;
+  }
+  #sobre p{
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  footer{
+    background: var(--bg-2);
+    border-top: 1px solid var(--surface-border);
+    padding: 1.6rem 1.5rem 6.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  footer .redes{
+    margin-top: 0.7rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+  footer .redes a{
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--surface-border);
+    padding-bottom: 2px;
+  }
+  footer .redes a:hover{ color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- whatsapp flutuante ---------- */
+  #whats-flutuante{
+    position: fixed;
+    right: 1.2rem;
+    bottom: 1.2rem;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    background: #25D366;
+    color: #0b1a10;
+    border: none;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    cursor: pointer;
+    z-index: 25;
+    transition: bottom 0.25s ease;
+  }
+  #whats-flutuante.subiu{ bottom: 5.4rem; }
+
+  /* ---------- pedido flutuante ---------- */
+  #pedido-barra{
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--bg-2);
+    border-top: 3px solid var(--accent);
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+  }
+  #pedido-barra.visivel{ transform: translateY(0); }
+
+  #pedido-info{ font-size: 0.95rem; color: var(--text); }
+  #pedido-info strong{ color: var(--text-strong); }
+  #pedido-total{ color: var(--accent); font-weight: 700; font-size: 1.1rem; }
+
+  .barra-botoes{ display: flex; gap: 0.6rem; }
+
+  #ver-pedido, #limpar-pedido{
+    border: 1px solid var(--surface-border);
+    background: transparent;
+    color: var(--text);
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #ver-pedido{ background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+
+  /* ---------- painel do pedido ---------- */
+  #painel-fundo{
+    position: fixed; inset: 0;
+    background: rgba(10,7,5,0.7);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 30;
+  }
+  #painel-fundo.aberto{ display: flex; }
+
+  #painel{
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    overflow-y: auto;
+    background: var(--bg-2);
+    border: 1px solid var(--surface-border);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    padding: 1.5rem;
+  }
+
+  #painel h2{
+    margin: 0 0 1rem;
+    color: var(--text-strong);
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .linha-pedido{
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  .qtd-ctrl{ display: flex; align-items: center; gap: 0.4rem; }
+  .qtd-ctrl button{
+    width: 1.7rem; height: 1.7rem;
+    border-radius: 6px;
+    border: 1px solid var(--surface-border);
+    background: var(--surface);
+    color: var(--text-strong);
+    cursor: pointer;
+  }
+
+  .linha-pedido .subtotal{ color: var(--accent); font-weight: 600; min-width: 4.5rem; text-align: right; }
+
+  #painel-vazio{ color: var(--text-muted); text-align: center; padding: 1.5rem 0; }
+
+  #enviar-whatsapp{
+    display: block;
+    width: 100%;
+    margin-top: 1.2rem;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 10px;
+    background: #25D366;
+    color: #0b1a10;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  #enviar-whatsapp:disabled{ opacity: 0.4; cursor: not-allowed; }
+
+  #fechar-painel{
+    display: block;
+    margin: 1rem auto 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="logo-splash">Pixel<strong>Codado</strong></div>
+  <div class="splash-sub">carregando o cardápio</div>
+  <div class="splash-barra"><span></span></div>
+</div>
+
+<div class="topbar">
+  <span class="marca">Pixel<strong>Codado</strong></span>
+  <button id="toggle-tema">🌙 Modo escuro</button>
+</div>
+
+<header>
+  <h1>ESPETI<span>NHO</span>S</h1>
+  <p>Escolha e monte seu pedido</p>
+</header>
+
+<div class="controles">
+  <input type="text" id="busca" placeholder="Buscar espetinho... (ex: picanha)">
+  <div class="chips" id="chips"></div>
+</div>
+
+<main id="lista"></main>
+
+<div class="sem-resultado" id="sem-resultado">Nenhum espetinho encontrado.</div>
+
+<footer>
+  <div class="redes">
+    <a href="#" target="_blank" rel="noopener">Instagram</a>
+    <a href="#" target="_blank" rel="noopener">YouTube</a>
+    <a href="#" target="_blank" rel="noopener">TikTok</a>
+  </div>
+</footer>
+
+<button id="whats-flutuante" aria-label="Falar no WhatsApp">💬</button>
+
+<div id="pedido-barra">
+  <div id="pedido-info"><strong id="pedido-qtd">0</strong> itens · <span id="pedido-total">R$ 0,00</span></div>
+  <div class="barra-botoes">
+    <button id="limpar-pedido">Limpar</button>
+    <button id="ver-pedido">Ver pedido</button>
+  </div>
+</div>
+
+<div id="painel-fundo">
+  <div id="painel">
+    <h2>Seu pedido</h2>
+    <div id="painel-conteudo"></div>
+    <button id="enviar-whatsapp" disabled>Enviar pedido no WhatsApp</button>
+    <button id="fechar-painel">fechar</button>
+  </div>
+</div>
+
+<script>
+  // troque pelo número real (formato: código do país + DDD + número, só dígitos)
+  const NUMERO_WHATSAPP = "5511999999999";
+
+  const espetinhos = [
+    { num: 1,  nome: "Contra Filé", preco: 10.00, cat: "carnes" },
+    { num: 2,  nome: "Medalhão", preco: 10.00, cat: "carnes" },
+    { num: 3,  nome: "Coração", preco: 10.00, cat: "carnes" },
+    { num: 4,  nome: "Panceta", preco: 10.00, cat: "carnes" },
+    { num: 5,  nome: "Linguiça Apimentada", preco: 10.00, cat: "linguicas" },
+    { num: 6,  nome: "Linguiça", obs: "Toscana de Frango", preco: 10.00, cat: "linguicas" },
+    { num: 7,  nome: "Linguiça", obs: "Mista sem Pimenta", preco: 10.00, cat: "linguicas" },
+    { num: 8,  nome: "Asinha", preco: 12.00, cat: "aves" },
+    { num: 9,  nome: "Queijo Coalho", preco: 12.00, cat: "frios" },
+    { num: 10, nome: "Pão de Alho", preco: 8.00, cat: "frios" },
+    { num: 11, nome: "Provolone", preco: 12.00, cat: "frios" },
+    { num: 12, nome: "Romeu e Julieta", preco: 14.00, cat: "frios" },
+    { num: 13, nome: "Kafta", preco: 10.00, cat: "linguicas" },
+    { num: 14, nome: "Coxa sobre Coxa", preco: 12.00, cat: "aves" },
+    { num: 15, nome: "Panceta", obs: "Pedaço", preco: 15.00, cat: "carnes" },
+    { num: 16, nome: "Cupim", preco: 16.00, cat: "carnes" },
+    { num: 17, nome: "Picanha", preco: 29.00, cat: "carnes" },
+    { num: 18, nome: "Camarão", preco: 12.00, cat: "frutosdomar" },
+    { num: 19, nome: "Costelinha Suína", preco: 16.00, cat: "carnes" },
+    { num: 20, nome: "Medalhão de Costela", preco: 12.00, cat: "carnes" },
+    { num: 21, nome: "Costela Gaúcha", obs: "Pedaço", preco: 16.00, cat: "carnes" },
+    { num: 22, nome: "Carne de Sol", obs: "Pedaço", preco: 25.00, cat: "carnes" },
+  ];
+
+  const categorias = [
+    { id: "todos", rotulo: "Todos" },
+    { id: "carnes", rotulo: "Carnes" },
+    { id: "aves", rotulo: "Aves" },
+    { id: "linguicas", rotulo: "Linguiças" },
+    { id: "frios", rotulo: "Frios" },
+    { id: "frutosdomar", rotulo: "Frutos do Mar" },
+    { id: "favoritos", rotulo: "★ Favoritos" },
+  ];
+
+  const pedido = {};          // { num: quantidade }
+  const favoritos = new Set(); // nums favoritados
+  let categoriaAtiva = "todos";
+
+  const listaEl = document.getElementById("lista");
+  const buscaEl = document.getElementById("busca");
+  const chipsEl = document.getElementById("chips");
+  const semResultadoEl = document.getElementById("sem-resultado");
+
+  function formatarPreco(valor){
+    return "R$ " + valor.toFixed(2).replace(".", ",");
+  }
+
+  function renderizarChips(){
+    chipsEl.innerHTML = categorias.map(c =>
+      `<button class="chip ${c.id === categoriaAtiva ? "ativo" : ""}" data-cat="${c.id}">${c.rotulo}</button>`
+    ).join("");
+    chipsEl.querySelectorAll(".chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        categoriaAtiva = btn.dataset.cat;
+        renderizarChips();
+        filtrarLista();
+      });
+    });
+  }
+
+  function renderizarLista(){
+    listaEl.innerHTML = "";
+    espetinhos.forEach(esp => {
+      const item = document.createElement("div");
+      item.className = "item";
+      item.dataset.nome = (esp.nome + " " + (esp.obs || "")).toLowerCase();
+      item.dataset.cat = esp.cat;
+      item.dataset.num = esp.num;
+
+      item.innerHTML = `
+        <span class="num">${String(esp.num).padStart(2, "0")}</span>
+        <span class="nome">${esp.nome}${esp.obs ? `<small>${esp.obs}</small>` : ""}</span>
+        <span class="preco">${formatarPreco(esp.preco)}</span>
+        <button class="fav-btn" aria-label="Favoritar ${esp.nome}">☆</button>
+        <div class="item-qtd-ctrl">
+          <button class="menos-btn" aria-label="Diminuir ${esp.nome}" disabled>−</button>
+          <span class="item-qtd">0</span>
+          <button class="add-btn" aria-label="Adicionar ${esp.nome}">+</button>
+        </div>
+      `;
+
+      item.querySelector(".add-btn").addEventListener("click", () => {
+        alterarQuantidade(esp.num, 1);
+      });
+      item.querySelector(".menos-btn").addEventListener("click", () => {
+        alterarQuantidade(esp.num, -1);
+      });
+
+      const favBtn = item.querySelector(".fav-btn");
+      favBtn.addEventListener("click", () => {
+        if (favoritos.has(esp.num)){
+          favoritos.delete(esp.num);
+          favBtn.textContent = "☆";
+          favBtn.classList.remove("marcado");
+        } else {
+          favoritos.add(esp.num);
+          favBtn.textContent = "★";
+          favBtn.classList.add("marcado");
+        }
+        if (categoriaAtiva === "favoritos") filtrarLista();
+      });
+
+      listaEl.appendChild(item);
+    });
+  }
+
+  function filtrarLista(){
+    const termo = buscaEl.value.trim().toLowerCase();
+    let algumVisivel = false;
+    document.querySelectorAll(".item").forEach(item => {
+      const bateBusca = item.dataset.nome.includes(termo);
+      const bateCategoria =
+        categoriaAtiva === "todos" ? true :
+        categoriaAtiva === "favoritos" ? favoritos.has(Number(item.dataset.num)) :
+        item.dataset.cat === categoriaAtiva;
+      const visivel = bateBusca && bateCategoria;
+      item.classList.toggle("oculto", !visivel);
+      if (visivel) algumVisivel = true;
+    });
+    semResultadoEl.style.display = algumVisivel ? "none" : "block";
+  }
+
+  buscaEl.addEventListener("input", filtrarLista);
+
+  // ---------- tema claro/escuro ----------
+  const toggleTemaBtn = document.getElementById("toggle-tema");
+  toggleTemaBtn.addEventListener("click", () => {
+    const atual = document.documentElement.dataset.tema;
+    const novo = atual === "escuro" ? "claro" : "escuro";
+    document.documentElement.dataset.tema = novo;
+    toggleTemaBtn.textContent = novo === "escuro" ? "🌙 Modo escuro" : "☀️ Modo claro";
+  });
+
+  // ---------- barra de pedido ----------
+  const barraEl = document.getElementById("pedido-barra");
+  const pedidoQtdEl = document.getElementById("pedido-qtd");
+  const pedidoTotalEl = document.getElementById("pedido-total");
+  const whatsFlutuanteBtn = document.getElementById("whats-flutuante");
+
+  function calcularResumo(){
+    let qtd = 0, total = 0;
+    Object.entries(pedido).forEach(([num, q]) => {
+      const esp = espetinhos.find(e => e.num === Number(num));
+      qtd += q;
+      total += q * esp.preco;
+    });
+    return { qtd, total };
+  }
+
+  function atualizarBarra(){
+    const { qtd, total } = calcularResumo();
+    pedidoQtdEl.textContent = qtd;
+    pedidoTotalEl.textContent = formatarPreco(total);
+    const visivel = qtd > 0;
+    barraEl.classList.toggle("visivel", visivel);
+    whatsFlutuanteBtn.classList.toggle("subiu", visivel);
+    renderizarPainel();
+    atualizarQtdsNaLista();
+  }
+
+  function alterarQuantidade(num, delta){
+    pedido[num] = Math.max(0, (pedido[num] || 0) + delta);
+    atualizarBarra();
+  }
+
+  function atualizarQtdsNaLista(){
+    document.querySelectorAll(".item").forEach(item => {
+      const num = Number(item.dataset.num);
+      const qtd = pedido[num] || 0;
+      item.querySelector(".item-qtd").textContent = qtd;
+      item.querySelector(".menos-btn").disabled = qtd === 0;
+    });
+  }
+
+  document.getElementById("limpar-pedido").addEventListener("click", () => {
+    Object.keys(pedido).forEach(k => delete pedido[k]);
+    atualizarBarra();
+  });
+
+  // ---------- whatsapp flutuante (contato geral) ----------
+  whatsFlutuanteBtn.addEventListener("click", () => {
+    const msg = encodeURIComponent("Olá! Vi o cardápio de espetinhos e queria tirar uma dúvida.");
+    window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${msg}`, "_blank");
+  });
+
+  // ---------- painel detalhado ----------
+  const painelFundoEl = document.getElementById("painel-fundo");
+  const painelConteudoEl = document.getElementById("painel-conteudo");
+  const enviarWhatsBtn = document.getElementById("enviar-whatsapp");
+
+  document.getElementById("ver-pedido").addEventListener("click", () => {
+    painelFundoEl.classList.add("aberto");
+  });
+  document.getElementById("fechar-painel").addEventListener("click", () => {
+    painelFundoEl.classList.remove("aberto");
+  });
+  painelFundoEl.addEventListener("click", (e) => {
+    if (e.target === painelFundoEl) painelFundoEl.classList.remove("aberto");
+  });
+
+  function renderizarPainel(){
+    const entradas = Object.entries(pedido).filter(([, q]) => q > 0);
+    enviarWhatsBtn.disabled = entradas.length === 0;
+
+    if (entradas.length === 0){
+      painelConteudoEl.innerHTML = `<p id="painel-vazio">Seu pedido está vazio.</p>`;
+      return;
+    }
+    painelConteudoEl.innerHTML = entradas.map(([num, q]) => {
+      const esp = espetinhos.find(e => e.num === Number(num));
+      return `
+        <div class="linha-pedido">
+          <span>${esp.nome}${esp.obs ? " · " + esp.obs : ""}</span>
+          <div class="qtd-ctrl">
+            <button data-acao="menos" data-num="${num}">−</button>
+            <span>${q}</span>
+            <button data-acao="mais" data-num="${num}">+</button>
+          </div>
+          <span class="subtotal">${formatarPreco(q * esp.preco)}</span>
+        </div>
+      `;
+    }).join("");
+
+    painelConteudoEl.querySelectorAll("button[data-acao]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const num = Number(btn.dataset.num);
+        alterarQuantidade(num, btn.dataset.acao === "mais" ? 1 : -1);
+      });
+    });
+  }
+
+  enviarWhatsBtn.addEventListener("click", () => {
+    const entradas = Object.entries(pedido).filter(([, q]) => q > 0);
+    if (entradas.length === 0) return;
+    const { total } = calcularResumo();
+    let linhas = entradas.map(([num, q]) => {
+      const esp = espetinhos.find(e => e.num === Number(num));
+      return `${q}x ${esp.nome}${esp.obs ? " (" + esp.obs + ")" : ""} — ${formatarPreco(q * esp.preco)}`;
+    });
+    const mensagem =
+      "Olá! Gostaria de fazer o seguinte pedido:\n\n" +
+      linhas.join("\n") +
+      `\n\nTotal: ${formatarPreco(total)}`;
+    window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, "_blank");
+  });
+
+  // ---------- splash ----------
+  const splashEl = document.getElementById("splash");
+  function esconderSplash(){
+    splashEl.classList.add("saindo");
+    setTimeout(() => splashEl.classList.add("escondido"), 550);
+  }
+  splashEl.addEventListener("click", esconderSplash);
+  setTimeout(esconderSplash, 2200);
+
+  // ---------- inicialização ----------
+  renderizarChips();
+  renderizarLista();
+</script>
+
+</body>
+</html>
